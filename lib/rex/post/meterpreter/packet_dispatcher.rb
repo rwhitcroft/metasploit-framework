@@ -132,17 +132,18 @@ module PacketDispatcher
     bytes = 0
     raw   = packet.to_r(session_guid, tlv_enc_key)
     err   = nil
+    jpeg  = "\xff\xd8\xff\xe0\x00\x10\x4a\x46\x49\x46"
 
     # Short-circuit send when using a passive dispatcher
     if self.passive_service
-      send_queue.push(raw)
+      send_queue.push(jpeg + raw)
       return raw.size # Lie!
     end
 
     if raw
       self.comm_mutex.synchronize do
         begin
-          bytes = self.sock.write(raw)
+          bytes = self.sock.write(jpeg + raw)
         rescue ::Exception => e
           err = e
         end

