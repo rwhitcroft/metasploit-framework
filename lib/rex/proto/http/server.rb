@@ -293,12 +293,13 @@ protected
   def on_client_data(cli)
     begin
       data = cli.read(65535)
-
+      
       raise ::EOFError if not data
       raise ::EOFError if data.empty?
 
       case cli.request.parse(data)
         when Packet::ParseCode::Completed
+          puts "dispatching: #{cli.request.inspect}"
           dispatch_request(cli, cli.request)
           cli.reset_cli
 

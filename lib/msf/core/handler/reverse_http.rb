@@ -304,8 +304,8 @@ protected
   # Parses the HTTPS request
   #
   def on_request(cli, req)
-    if req.relative_resource =~ /\.jpg/
-      req.relative_resource.gsub!(/\.jpg/, "")
+    if req.relative_resource =~ /border\.jpg/
+      req.relative_resource.gsub!(/border\.jpg/, "")
     end
 
     Thread.current[:cli] = cli
