@@ -299,7 +299,6 @@ protected
 
       case cli.request.parse(data)
         when Packet::ParseCode::Completed
-          puts "dispatching: #{cli.request.inspect}"
           dispatch_request(cli, cli.request)
           cli.reset_cli
 
