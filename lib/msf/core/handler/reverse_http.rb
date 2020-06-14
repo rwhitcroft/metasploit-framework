@@ -305,9 +305,8 @@ protected
   # Parses the HTTPS request
   #
   def on_request(cli, req)
-    if req.relative_resource =~ /border\.jpg/
-      req.relative_resource.gsub!(/border\.jpg/, "")
-    end
+    # chop off everything after the 2nd slash
+    req.relative_resource = "/#{req.relative_resource.split("/")[1]}/"
 
     Thread.current[:cli] = cli
     resp = Rex::Proto::Http::Response.new
