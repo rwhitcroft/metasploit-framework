@@ -70,8 +70,7 @@ class Core
     "-v" => [ false, "Print more detailed info.  Use with -i and -l"  ])
 
   @@tip_opts = Rex::Parser::Arguments.new(
-    "-h" => [ false, "Help banner."                                   ],
-    "-l" => [ false, "List all available tips."                       ])
+    "-h" => [ false, "Help banner."                                   ])
 
   @@connect_opts = Rex::Parser::Arguments.new(
     "-h" => [ false, "Help banner."                                   ],
@@ -119,7 +118,7 @@ class Core
       "set"        => "Sets a context-specific variable to a value",
       "setg"       => "Sets a global variable to a value",
       "sleep"      => "Do nothing for the specified number of seconds",
-      "tip"        => "Show a useful productivity tip",
+      "tips"       => "Show a list of useful productivity tips",
       "threads"    => "View and manipulate background threads",
       "unload"     => "Unload a framework plugin",
       "unset"      => "Unsets one or more context-specific variables",
@@ -139,6 +138,10 @@ class Core
     @previous_module = nil
     @previous_target = nil
     @history_limit = 100
+  end
+
+  def deprecated_commands
+    ['tip']
   end
 
   #
@@ -257,20 +260,22 @@ class Core
 
   end
 
-  def cmd_tip_help
-    print_line "Usage: tip [options]"
+  def cmd_tips_help
+    print_line "Usage: tips [options]"
     print_line
-    print_line "Print a useful tip on how to use Metasploit"
+    print_line "Print a useful list of productivity tips on how to use Metasploit"
     print @@tip_opts.usage
   end
 
+  alias cmd_tip_help cmd_tips_help
+
   #
-  # Display a useful productivity tip to the user.
+  # Display useful productivity tips to the user.
   #
-  def cmd_tip(*args)
+  def cmd_tips(*args)
     if args.include?("-h")
       cmd_tip_help
-    elsif args.include?("-l")
+    else
       tbl = Table.new(
         Table::Style::Default,
         'Columns' => %w[Id Tip]
@@ -281,10 +286,10 @@ class Core
       end
 
       print(tbl.to_s)
-    else
-      print_line Tip.sample
     end
   end
+
+  alias cmd_tip cmd_tips
 
   def cmd_connect_help
     print_line "Usage: connect [options] <host> <port>"
@@ -1616,6 +1621,9 @@ class Core
       return false
     end
 
+    # Save the old value before changing it, in case we need to compare it
+    old_value = datastore[name]
+
     begin
       if append
         datastore[name] = datastore[name] + value
@@ -1630,6 +1638,11 @@ class Core
     # Set PAYLOAD from TARGET
     if name.upcase == 'TARGET' && active_module && (active_module.exploit? || active_module.evasion?)
       active_module.import_target_defaults
+    end
+
+    # If the new SSL value already set in datastore[name] is different from the old value, warn the user
+    if name.casecmp('SSL') == 0 && datastore[name] != old_value
+      print_warning("Changing the SSL option's value may require changing RPORT!")
     end
 
     print_line("#{name} => #{datastore[name]}")
@@ -2290,9 +2303,7 @@ class Core
         res << str+str[0, str.length - 1]
       else
         option_values_target_addrs().each do |addr|
-          res << addr+'/32'
-          res << addr+'/24'
-          res << addr+'/16'
+          res << addr
         end
       end
 
